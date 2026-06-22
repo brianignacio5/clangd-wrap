@@ -11,15 +11,31 @@ Cross-platform wrapper for [clangd](https://clangd.llvm.org/) that proxies LSP t
 - Graceful clangd restart with LSP session replay (`initialize`, open documents)
 - Pluggable restart task pipeline
 
-## Environment variables
+## Configuration file
 
-| Variable | Default | Description |
+Wrapper settings are loaded from an optional YAML file passed with `--config`. When omitted, defaults apply.
+
+| Key | Default | Description |
 | --- | --- | --- |
-| `CLANGD_PATH` | `clangd` on PATH | Path to the real clangd binary |
-| `CLANGD_WRAP_LOG` | `error` | Wrapper log level: `error`, `warn`, `info`, `debug`, `trace` |
-| `CLANGD_WRAP_WATCH_ROOT` | current working directory | Root directory for config file discovery and watching |
+| `clangd_path` | `clangd` on PATH | Path to the real clangd binary |
+| `log_level` | `error` | Wrapper log level: `error`, `warn`, `info`, `debug`, `trace` |
+| `watch_root` | current working directory | Root directory for config file discovery and watching |
 
-Wrapper-specific settings use environment variables only so `clangd.path` in editors stays a single binary with no extra flags.
+Example `clangd-wrap.yaml`:
+
+```yaml
+clangd_path: /usr/bin/clangd
+log_level: debug
+watch_root: /path/to/project
+```
+
+Example invocation:
+
+```bash
+clangd-wrap --config clangd-wrap.yaml --background-index --clang-tidy
+```
+
+`--config` and its value are consumed by the wrapper and are not forwarded to clangd.
 
 ## Argument merging
 
@@ -38,17 +54,26 @@ When spawning clangd, the wrapper merges arguments as:
 ```json
 {
   "clangd.path": "C:/path/to/clangd-wrap.exe",
-  "clangd.arguments": ["--background-index", "--clang-tidy"]
+  "clangd.arguments": [
+    "--config",
+    "C:/path/to/clangd-wrap.yaml",
+    "--background-index",
+    "--clang-tidy"
+  ]
 }
 ```
 
 ### Neovim (lspconfig)
 
 ```lua
-cmd = { "/path/to/clangd-wrap", "--background-index" }
+cmd = {
+  "/path/to/clangd-wrap",
+  "--config", "/path/to/clangd-wrap.yaml",
+  "--background-index",
+}
 ```
 
-Set `CLANGD_PATH` if clangd is not on your PATH.
+Set `clangd_path` in the config file if clangd is not on your PATH.
 
 ## Building
 

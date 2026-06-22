@@ -18,8 +18,9 @@ use crate::watcher::ConfigWatcher;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let user_args = cli::parse_user_args();
-    let wrapper_config = WrapperConfig::from_env()?;
+    let parsed = cli::parse_cli();
+    let wrapper_config = WrapperConfig::load(parsed.config.as_deref())?;
+    let user_args = parsed.clangd_args;
 
     init_tracing(&wrapper_config);
 
