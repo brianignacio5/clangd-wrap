@@ -1,13 +1,12 @@
 # clangd-wrap
 
-Cross-platform wrapper for [clangd](https://clangd.llvm.org/) that proxies LSP traffic over stdio, injects in-memory arguments, watches project configuration files, and restarts clangd when `compile_commands.json` or related config changes.
+Cross-platform wrapper for [clangd](https://clangd.llvm.org/) that proxies LSP traffic over stdio, watches compile configuration files, and restarts clangd when `compile_commands.json` or `compile_flags.txt` changes.
 
 ## Features
 
 - Drop-in replacement for `clangd` in editors (VS Code, Neovim, etc.)
 - Transparent pass-through of all clangd CLI arguments
-- In-memory argument injection (merged before user args)
-- Watches `compile_commands.json`, `build/compile_commands.json`, `compile_flags.txt`, and `.clangd`
+- Watches `compile_commands.json`, `build/compile_commands.json`, and `compile_flags.txt`
 - Graceful clangd restart with LSP session replay (`initialize`, open documents)
 - Pluggable restart task pipeline
 
@@ -36,16 +35,6 @@ clangd-wrap --config clangd-wrap.yaml --background-index --clang-tidy
 ```
 
 `--config` and its value are consumed by the wrapper and are not forwarded to clangd.
-
-## Argument merging
-
-When spawning clangd, the wrapper merges arguments as:
-
-```
-[injected_args...] + [user_args from editor...]
-```
-
-`injected_args` are updated by wrapper logic (e.g. reading `.clangd` `CompileFlags.CompilationDatabase`).
 
 ## Editor integration
 
@@ -99,15 +88,15 @@ Tag a release (e.g. `v0.1.0`) to trigger the workflow.
 When a watched config file changes (debounced, content-hash verified):
 
 1. Send LSP `shutdown` / `exit` to clangd
-2. Run restart tasks (log, validate CDB, apply `.clangd` config)
-3. Respawn clangd with updated arguments
+2. Run restart tasks (log, validate CDB)
+3. Respawn clangd with the same user arguments
 4. Replay `initialize` and `textDocument/didOpen` for tracked buffers
 
 Editors may briefly show stale diagnostics during restart (similar to `clangd.restart` in VS Code).
 
 ## Custom restart tasks
 
-Implement the `RestartTask` trait in `src/tasks/mod.rs` and register tasks in `main.rs`. See the default pipeline: `LogChangeTask`, `ValidateCompileCommandsTask`, `ApplyClangdConfigTask`.
+Implement the `RestartTask` trait in `src/tasks/mod.rs` and register tasks in `main.rs`. See the default pipeline: `LogChangeTask`, `ValidateCompileCommandsTask`.
 
 ## License
 

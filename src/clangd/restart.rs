@@ -5,7 +5,6 @@ use anyhow::{Context, Result};
 use serde_json::{json, Value};
 use tokio::time::timeout;
 
-use crate::config::parse_clangd_file;
 use crate::lsp::framing::{read_message, write_message};
 use crate::lsp::session::SharedState;
 use crate::tasks::RestartContext;
@@ -38,7 +37,7 @@ async fn restart_clangd(state: &mut SharedState, event: ConfigChangeEvent) -> Re
 
     run_restart_tasks(state, &event).await?;
 
-    let args = state.merged_clangd_args();
+    let args = state.user_args.clone();
     let mut process = spawn_clangd(&state.wrapper_config, &args)
         .await
         .context("respawn clangd after config change")?;
@@ -101,15 +100,11 @@ async fn graceful_shutdown(process: &mut ClangdProcess, state: &mut SharedState)
 }
 
 async fn run_restart_tasks(state: &mut SharedState, event: &ConfigChangeEvent) -> Result<()> {
-    let clangd_config = parse_clangd_file(&state.project.clangd_path).unwrap_or_default();
-
     let mut ctx = RestartContext {
         project_root: state.project.root.clone(),
         changed_path: event.path.clone(),
         file_hash: event.hash.clone(),
         file_contents: event.contents.clone(),
-        clangd_config,
-        injected_args: state.injected_args.clone(),
         user_args: state.user_args.clone(),
     };
 
@@ -119,7 +114,6 @@ async fn run_restart_tasks(state: &mut SharedState, event: &ConfigChangeEvent) -
             .with_context(|| format!("restart task `{}` failed", task.name()))?;
     }
 
-    state.injected_args = ctx.injected_args;
     Ok(())
 }
 

@@ -25,20 +25,17 @@ async fn main() -> anyhow::Result<()> {
     init_tracing(&wrapper_config);
 
     let project = config::discover_project(&wrapper_config.watch_root, &user_args)?;
-    let injected_args = config::injected_args_from_clangd(&project.clangd_path)?;
 
     tracing::debug!(
         watch_root = %wrapper_config.watch_root.display(),
         clangd = %wrapper_config.clangd_path,
         user_arg_count = user_args.len(),
-        injected_arg_count = injected_args.len(),
         "starting clangd-wrap"
     );
 
     let restart_tasks = default_pipeline();
     let shared = Arc::new(Mutex::new(lsp::session::SharedState::new(
         user_args.clone(),
-        injected_args.clone(),
         restart_tasks,
         wrapper_config.clone(),
         project.clone(),

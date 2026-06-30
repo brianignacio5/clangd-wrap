@@ -30,7 +30,7 @@ impl Proxy {
     pub async fn spawn(&mut self) -> Result<()> {
         {
             let mut state = self.shared.lock().await;
-            let args = state.merged_clangd_args();
+            let args = state.user_args.clone();
             let wrapper = state.wrapper_config.clone();
             let process = spawn_clangd(&wrapper, &args)
                 .await

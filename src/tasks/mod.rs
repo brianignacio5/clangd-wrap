@@ -1,17 +1,13 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use tracing::info;
-
-use crate::config::{build_injected_args, parse_clangd_file, ClangdConfig};
 
 pub struct RestartContext {
     pub project_root: PathBuf,
     pub changed_path: PathBuf,
     pub file_hash: String,
     pub file_contents: Option<String>,
-    pub clangd_config: ClangdConfig,
-    pub injected_args: Vec<String>,
     pub user_args: Vec<String>,
 }
 
@@ -78,30 +74,10 @@ impl RestartTask for ValidateCompileCommandsTask {
     }
 }
 
-pub struct ApplyClangdConfigTask;
-
-impl RestartTask for ApplyClangdConfigTask {
-    fn name(&self) -> &str {
-        "apply_clangd_config"
-    }
-
-    fn run(&self, ctx: &mut RestartContext) -> Result<()> {
-        let clangd_path = ctx.project_root.join(".clangd");
-        if clangd_path.exists() {
-            ctx.clangd_config = parse_clangd_file(&clangd_path)
-                .with_context(|| format!("parse {}", clangd_path.display()))?;
-        }
-
-        ctx.injected_args = build_injected_args(&ctx.clangd_config, Some(&ctx.project_root));
-        Ok(())
-    }
-}
-
 pub fn default_pipeline() -> Vec<Box<dyn RestartTask>> {
     vec![
         Box::new(LogChangeTask),
         Box::new(ValidateCompileCommandsTask),
-        Box::new(ApplyClangdConfigTask),
     ]
 }
 
@@ -123,8 +99,6 @@ mod tests {
             changed_path: PathBuf::from("compile_commands.json"),
             file_hash: "abc".to_string(),
             file_contents: Some("[]".to_string()),
-            clangd_config: ClangdConfig::default(),
-            injected_args: vec![],
             user_args: vec![],
         };
 

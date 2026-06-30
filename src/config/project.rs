@@ -5,7 +5,6 @@ use anyhow::{Context, Result};
 pub const CONFIG_FILE_NAMES: &[&str] = &[
     "compile_commands.json",
     "compile_flags.txt",
-    ".clangd",
 ];
 
 /// Known project-relative paths to watch in addition to root-level files.
@@ -17,7 +16,6 @@ pub struct ProjectPaths {
     pub compile_commands: PathBuf,
     pub build_compile_commands: PathBuf,
     pub compile_flags: PathBuf,
-    pub clangd_path: PathBuf,
     pub compile_commands_dir: Option<PathBuf>,
     pub watch_paths: Vec<PathBuf>,
 }
@@ -34,7 +32,6 @@ impl ProjectPaths {
             root.join("compile_commands.json"),
             root.join("build/compile_commands.json"),
             root.join("compile_flags.txt"),
-            root.join(".clangd"),
         ];
 
         if let Some(dir) = &compile_commands_dir {
@@ -49,7 +46,6 @@ impl ProjectPaths {
             compile_commands,
             build_compile_commands: root.join("build/compile_commands.json"),
             compile_flags: root.join("compile_flags.txt"),
-            clangd_path: root.join(".clangd"),
             compile_commands_dir,
             watch_paths,
         }

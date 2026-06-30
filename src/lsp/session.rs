@@ -16,7 +16,6 @@ pub struct OpenDocument {
 
 pub struct SharedState {
     pub user_args: Vec<String>,
-    pub injected_args: Vec<String>,
     pub restart_tasks: Vec<Box<dyn RestartTask>>,
     pub wrapper_config: WrapperConfig,
     pub project: ProjectPaths,
@@ -32,14 +31,12 @@ pub struct SharedState {
 impl SharedState {
     pub fn new(
         user_args: Vec<String>,
-        injected_args: Vec<String>,
         restart_tasks: Vec<Box<dyn RestartTask>>,
         wrapper_config: WrapperConfig,
         project: ProjectPaths,
     ) -> Self {
         Self {
             user_args,
-            injected_args,
             restart_tasks,
             wrapper_config,
             project,
@@ -51,14 +48,6 @@ impl SharedState {
             restarting: false,
             clangd: None,
         }
-    }
-
-    pub fn merged_clangd_args(&self) -> Vec<String> {
-        self.injected_args
-            .iter()
-            .chain(self.user_args.iter())
-            .cloned()
-            .collect()
     }
 
     pub fn observe_client_message(&mut self, message: &Value) {
@@ -212,7 +201,6 @@ mod tests {
     fn test_state() -> SharedState {
         SharedState::new(
             vec!["--background-index".to_string()],
-            vec![],
             vec![],
             WrapperConfig {
                 clangd_path: "clangd".to_string(),

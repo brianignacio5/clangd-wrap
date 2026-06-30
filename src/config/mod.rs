@@ -1,8 +1,6 @@
-pub mod clangd_yaml;
 pub mod project;
 pub mod wrapper_yaml;
 
-pub use clangd_yaml::{build_injected_args, injected_args_from_clangd, parse_clangd_file, ClangdConfig};
 pub use project::{discover_project, ProjectPaths, CONFIG_FILE_NAMES};
 
 use std::path::{Path, PathBuf};
